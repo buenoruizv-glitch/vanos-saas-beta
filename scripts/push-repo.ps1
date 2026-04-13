@@ -126,19 +126,45 @@ if (-not $status) {
 
 Invoke-Git -GitArguments @("branch", "-M", "main")
 
-Write-Host "Comprobando remoto…"
-Invoke-Git -GitArguments @("fetch", "origin")
-$remoteMain = (& $Git ls-remote --heads origin main 2>$null)
-if ($remoteMain) {
-  Write-Host "Sincronizando con origin/main (pull --rebase)…"
-  Invoke-Git -GitArguments @("pull", "--rebase", "origin", "main")
-} else {
-  Write-Host "Remoto sin rama main aún; primer push." -ForegroundColor DarkGray
+try {
+  Write-Host "Comprobando remoto…"
+  Invoke-Git -GitArguments @("fetch", "origin")
+
+  $remoteMain = (& $Git ls-remote --heads origin main 2>$null)
+  if ($remoteMain) {
+    Write-Host "Sincronizando con origin/main (pull --rebase)…"
+    # pull con argumentos citados: el splat @() con --rebase puede romperse en PowerShell.
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $pullOut = & $Git 'pull' '--rebase' 'origin' 'main' 2>&1
+    $pullCode = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap
+    if ($pullCode -ne 0) {
+      $detail = if ($null -eq $pullOut) { "" } else { ($pullOut | Out-String).Trim() }
+      throw "git pull --rebase fallo (codigo $pullCode): $detail"
+    }
+  } else {
+    Write-Host "Remoto sin rama main aún; primer push." -ForegroundColor DarkGray
+  }
+
+  Write-Host "Subiendo a origin (main)…"
+  $prevEap2 = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  $pushOut = & $Git 'push' '-u' 'origin' 'main' 2>&1
+  $pushCode = $LASTEXITCODE
+  $ErrorActionPreference = $prevEap2
+  if ($pushCode -ne 0) {
+    $detail = if ($null -eq $pushOut) { "" } else { ($pushOut | Out-String).Trim() }
+    throw "git push fallo (codigo $pushCode): $detail"
+  }
+
+  Write-Host ""
+  Write-Host "Listo. Vercel puede desplegar si el repo está conectado." -ForegroundColor Green
+  Write-Host ""
+  exit 0
+} catch {
+  Write-Host ""
+  Write-Host "ERROR en remoto (fetch/pull/push):" -ForegroundColor Red
+  Write-Host "$_" -ForegroundColor Red
+  exit 1
 }
-
-Write-Host "Subiendo a origin (main)…"
-Invoke-Git -GitArguments @("push", "-u", "origin", "main")
-
-Write-Host ""
-Write-Host "Listo. Vercel puede desplegar si el repo está conectado." -ForegroundColor Green
-Write-Host ""
