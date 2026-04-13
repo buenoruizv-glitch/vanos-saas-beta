@@ -94,6 +94,16 @@ if (-not $hasHead) {
 
 Invoke-Git @("branch", "-M", "main")
 
+Write-Host "Comprobando remoto…"
+Invoke-Git @("fetch", "origin")
+$remoteMain = (& $Git ls-remote --heads origin main 2>$null)
+if ($remoteMain) {
+  Write-Host "Sincronizando con origin/main (pull --rebase)…"
+  Invoke-Git @("pull", "--rebase", "origin", "main")
+} else {
+  Write-Host "Remoto sin rama main aún; primer push." -ForegroundColor DarkGray
+}
+
 Write-Host "Subiendo a origin (main)…"
 Invoke-Git @("push", "-u", "origin", "main")
 
