@@ -31,13 +31,11 @@ Set-Location -LiteralPath $RepoRoot
 $Git = Find-Git
 
 function Invoke-Git {
-  # No usar el nombre "Args": choca con $args automático de PowerShell y rompe el splatting.
-  param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArguments)
-  # PS 7+: stderr de git puede disparar error con $ErrorActionPreference Stop; PS 5: igual es mas seguro.
+  # Parametro explícito -GitArguments: ValueFromRemainingArguments junta "add" y "--all" en un solo token.
+  param([Parameter(Mandatory = $true)][string[]]$GitArguments)
   $prevEap = $ErrorActionPreference
   $ErrorActionPreference = "Continue"
   try {
-    # 2>&1 para capturar stderr; usar --all en lugar de -A (evita confusion con alias en PS).
     $out = & $Git @GitArguments 2>&1
     $code = $LASTEXITCODE
   } finally {
@@ -67,13 +65,13 @@ if ($remoteUrl -match "YOUR_USER|tu-repo") {
 
 if (-not (Test-Path -LiteralPath (Join-Path $RepoRoot ".git"))) {
   Write-Host "Inicializando repositorio git…"
-  Invoke-Git @("init")
+  Invoke-Git -GitArguments @("init")
 }
 
 $name = (& $Git config user.name 2>$null)
 if (-not $name) {
-  Invoke-Git @("config", "user.name", "VanOS deploy")
-  Invoke-Git @("config", "user.email", "deploy@local.invalid")
+  Invoke-Git -GitArguments @("config", "user.name", "VanOS deploy")
+  Invoke-Git -GitArguments @("config", "user.email", "deploy@local.invalid")
   Write-Host "(user.name/email configurados solo en este repo.)" -ForegroundColor DarkGray
 }
 
@@ -90,19 +88,19 @@ if ($hasOrigin) {
   $cur = (& $Git remote get-url origin 2>$null)
   if ($cur -and $cur.Trim() -ne $remoteUrl) {
     Write-Host "Actualizando URL de origin…"
-    Invoke-Git @("remote", "set-url", "origin", $remoteUrl)
+    Invoke-Git -GitArguments @("remote", "set-url", "origin", $remoteUrl)
   }
 } else {
   Write-Host "Añadiendo remoto origin…"
-  Invoke-Git @("remote", "add", "origin", $remoteUrl)
+  Invoke-Git -GitArguments @("remote", "add", "origin", $remoteUrl)
 }
 
 # Usar --all en lugar de -A: en algunos PowerShell -A se interpreta mal al pasarlo a git.exe
-Invoke-Git @("add", "--all")
+Invoke-Git -GitArguments @("add", "--all")
 $status = (& $Git status --porcelain)
 if ($status) {
   $msg = "deploy: $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
-  Invoke-Git @("commit", "-m", $msg)
+  Invoke-Git -GitArguments @("commit", "-m", $msg)
 } else {
   Write-Host "Sin cambios nuevos para commitear." -ForegroundColor DarkGray
 }
@@ -113,20 +111,20 @@ if (-not $hasHead) {
   exit 1
 }
 
-Invoke-Git @("branch", "-M", "main")
+Invoke-Git -GitArguments @("branch", "-M", "main")
 
 Write-Host "Comprobando remoto…"
-Invoke-Git @("fetch", "origin")
+Invoke-Git -GitArguments @("fetch", "origin")
 $remoteMain = (& $Git ls-remote --heads origin main 2>$null)
 if ($remoteMain) {
   Write-Host "Sincronizando con origin/main (pull --rebase)…"
-  Invoke-Git @("pull", "--rebase", "origin", "main")
+  Invoke-Git -GitArguments @("pull", "--rebase", "origin", "main")
 } else {
   Write-Host "Remoto sin rama main aún; primer push." -ForegroundColor DarkGray
 }
 
 Write-Host "Subiendo a origin (main)…"
-Invoke-Git @("push", "-u", "origin", "main")
+Invoke-Git -GitArguments @("push", "-u", "origin", "main")
 
 Write-Host ""
 Write-Host "Listo. Vercel puede desplegar si el repo está conectado." -ForegroundColor Green
