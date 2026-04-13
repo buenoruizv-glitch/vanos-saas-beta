@@ -11,6 +11,10 @@ npm run dev
 
 Copia `.env.example` a `.env.local` y rellena las variables (Firebase + `SESSION_SECRET`).
 
+### La web en Vercel sigue mostrando la plantilla de Next.js (“Get started by editing…”)
+
+Eso significa que **el despliegue no incluye el `app/page.tsx` actual** (código viejo en Git o build sin subir). Haz **commit y push** de todo el repo a la rama que Vercel usa (normalmente `main`), o en Vercel → **Deployments → Redeploy** del último commit correcto. Tras un push, el `prebuild` comprueba que la home sea la landing VanOS; si falla, no se genera el build.
+
 ## Presentar al cliente sin coste de hosting
 
 **Importante:** [Firebase App Hosting](https://firebase.google.com/docs/app-hosting) (Next.js completo en dominio `*.hosted.app`) **exige el plan Blaze** (facturación Google Cloud con tarjeta). El plan Spark gratuito **no** incluye ese alojamiento para SSR/API.
@@ -41,3 +45,10 @@ npm run firebase:deploy:rules
 
 - `npm run beta:check-env` — comprueba variables mínimas para una beta.
 - `node scripts/inject-admin-from-json.cjs <ruta.json>` — rellena Admin SDK en `.env.local` desde un JSON de cuenta de servicio.
+
+### Subir el repo con un clic (Windows)
+
+1. Copia `git-remote.local.example` a **`git-remote.local`** y pon la URL HTTPS de tu repo (GitHub/GitLab). Ese archivo no se sube a Git.
+2. Doble clic en **`push-to-github.bat`** o ejecuta `npm run git:push`.
+
+Requiere [Git para Windows](https://git-scm.com/download/win) y que ya hayas iniciado sesión una vez (`git credential manager` o SSH). La primera vez GitHub puede pedir login en el navegador.

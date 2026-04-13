@@ -28,6 +28,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# URL del remoto Git (solo local; usada por scripts/push-repo.ps1)
+git-remote.local
+
 # vercel
 .vercel
 
