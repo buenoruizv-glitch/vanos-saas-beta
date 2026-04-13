@@ -13,7 +13,21 @@ Copia `.env.example` a `.env.local` y rellena las variables (Firebase + `SESSION
 
 ### La web en Vercel sigue mostrando la plantilla de Next.js (“Get started by editing…”)
 
-Eso significa que **el despliegue no incluye el `app/page.tsx` actual** (código viejo en Git o build sin subir). Haz **commit y push** de todo el repo a la rama que Vercel usa (normalmente `main`), o en Vercel → **Deployments → Redeploy** del último commit correcto. Tras un push, el `prebuild` comprueba que la home sea la landing VanOS; si falla, no se genera el build.
+Eso significa que **el proyecto de Vercel no está construyendo el mismo código** que tu repo local (o un deploy antiguo sigue en caché). Revisa en orden:
+
+1. **Vercel → tu proyecto → Settings → Git**  
+   - **Connected Git Repository** debe ser el repo donde haces `push` (p. ej. `buenoruizv-glitch/vanos-saas-beta`).  
+   - **Production Branch** = `main` (o la rama que uses para producción).
+
+2. **Settings → General → Root Directory**  
+   - Debe estar **vacío** o apuntar a la raíz del Next.js (donde están `app/` y `package.json`). Si apunta a otra carpeta, Vercel compila **otro** `app/page.tsx` (a veces el template por defecto).
+
+3. **Deployments**  
+   - Abre el último deploy de **Production** y mira **Build Logs**: debe ejecutarse `prebuild` → `[verify-vanos-page] OK` y `next build` sin error. Si el build falla, Vercel puede seguir sirviendo un artefacto viejo.
+
+4. Tras corregir lo anterior: **Deployments → … → Redeploy** (sin usar caché, si la opción está disponible) o un **push** nuevo a `main`.
+
+En la home de producción, si el deploy es el correcto, al final del contenido aparece una línea pequeña **Deploy `abcdefg`** (SHA de Vercel). Si no aparece o el texto sigue siendo el de la plantilla Next, el dominio **no** está sirviendo este proyecto o ese build.
 
 ## Presentar al cliente sin coste de hosting
 

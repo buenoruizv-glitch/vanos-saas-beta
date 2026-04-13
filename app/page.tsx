@@ -36,6 +36,11 @@ export default function Home() {
             Ya tengo cuenta
           </Link>
         </div>
+        {process.env.VERCEL_GIT_COMMIT_SHA ? (
+          <p className="mt-16 text-xs text-zinc-400">
+            Deploy {process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7)}
+          </p>
+        ) : null}
       </main>
     </div>
   );
