@@ -66,16 +66,24 @@ if (-not $name) {
   Write-Host "(user.name/email configurados solo en este repo.)" -ForegroundColor DarkGray
 }
 
-$code = Invoke-GitSilent -GitExe $Git -GitArgs @("remote", "get-url", "origin")
-if ($code -ne 0) {
-  Write-Host "Añadiendo remoto origin…"
-  Invoke-Git @("remote", "add", "origin", $remoteUrl)
-} else {
+# Usar "git remote" (lista): get-url puede fallar en algunos estados y "add" da error 1 si origin ya existe.
+$remotes = @(& $Git remote 2>$null)
+$hasOrigin = $false
+foreach ($r in $remotes) {
+  if ($r.Trim() -eq "origin") {
+    $hasOrigin = $true
+    break
+  }
+}
+if ($hasOrigin) {
   $cur = (& $Git remote get-url origin 2>$null)
-  if ($cur -ne $remoteUrl) {
+  if ($cur -and $cur.Trim() -ne $remoteUrl) {
     Write-Host "Actualizando URL de origin…"
     Invoke-Git @("remote", "set-url", "origin", $remoteUrl)
   }
+} else {
+  Write-Host "Añadiendo remoto origin…"
+  Invoke-Git @("remote", "add", "origin", $remoteUrl)
 }
 
 Invoke-Git @("add", "-A")
