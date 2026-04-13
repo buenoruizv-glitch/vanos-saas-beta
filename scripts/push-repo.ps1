@@ -19,12 +19,6 @@ function Find-Git {
   throw "No se encontró git.exe. Instala Git desde https://git-scm.com/download/win"
 }
 
-function Invoke-GitSilent {
-  param([string[]]$GitArgs, [string]$GitExe)
-  & $GitExe @GitArgs 2>$null
-  return $LASTEXITCODE
-}
-
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $RepoRoot
 
@@ -108,7 +102,15 @@ if ($status) {
   Invoke-Git -GitArguments @("commit", "-m", $msg)
 }
 
-$hasHead = (Invoke-GitSilent -GitExe $Git -GitArgs @("rev-parse", "--verify", "HEAD")) -eq 0
+# Comprobar HEAD: argumentos entre comillas para que PS no interprete --verify.
+$null = & $Git 'rev-parse' '--verify' 'HEAD' 2>$null
+$hasHead = ($LASTEXITCODE -eq 0)
+if (-not $hasHead) {
+  $statusFull = (& $Git status 2>&1 | Out-String)
+  if ($statusFull -match "nothing to commit, working tree clean" -and $statusFull -match "On branch") {
+    $hasHead = $true
+  }
+}
 if (-not $hasHead) {
   Write-Host ""
   Write-Host "No hay ningun commit. Tras 'git add --all' no hay nada en staging." -ForegroundColor Red
