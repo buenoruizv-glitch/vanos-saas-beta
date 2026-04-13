@@ -1,0 +1,30 @@
+// VanOS: datos de negocio solo vía Admin SDK en el servidor.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    match /tenants/{tenantId} {
+      allow read, write: if false;
+    }
+
+    match /tenants/{tenantId}/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /chatSessions/{id} {
+      allow read, write: if false;
+    }
+
+    match /stripeEvents/{id} {
+      allow read, write: if false;
+    }
+  }
+}

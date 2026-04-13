@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "gpsByTenant": {
+      "$tenantId": {
+        ".read": "auth != null && auth.token.tenantId === $tenantId",
+        "$trackerId": {
+          ".read": "auth != null && auth.token.tenantId === $tenantId",
+          ".write": "auth != null && auth.token.tenantId === $tenantId"
+        }
+      }
+    }
+  }
+}
