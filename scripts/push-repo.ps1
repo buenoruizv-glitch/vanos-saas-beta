@@ -31,10 +31,11 @@ Set-Location -LiteralPath $RepoRoot
 $Git = Find-Git
 
 function Invoke-Git {
-  param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
-  & $Git @Args
+  # No usar el nombre "Args": choca con $args automático de PowerShell y rompe el splatting.
+  param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArguments)
+  & $Git @GitArguments
   if ($LASTEXITCODE -ne 0) {
-    throw "git $($Args -join ' ') falló (código $LASTEXITCODE)"
+    throw "git $($GitArguments -join ' ') fallo (codigo $LASTEXITCODE)"
   }
 }
 
