@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { TrpcProvider } from "@/components/providers/trpc-provider";
+import { getMetadataBase } from "@/lib/site-url";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: getMetadataBase(),
   title: {
     default: "VanOS",
     template: "%s · VanOS",
@@ -16,7 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="font-sans">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <TrpcProvider>{children}</TrpcProvider>
+      </body>
     </html>
   );
 }

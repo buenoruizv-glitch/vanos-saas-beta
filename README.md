@@ -18,8 +18,8 @@ Copia `.env.example` a `.env.local` y rellena las variables (Firebase + `SESSION
 Para **0 € y sin activar facturación en Google** (plan Hobby de Vercel):
 
 1. Conecta el repo (o usa la CLI): `npx vercel link` y `npx vercel deploy --prod`.
-2. En el [dashboard de Vercel](https://vercel.com) → proyecto → **Settings → Environment Variables**, pega las mismas claves que en `.env.local` (`NEXT_PUBLIC_*`, `FIREBASE_ADMIN_*`, `SESSION_SECRET`, etc.).
-3. **Actualiza `NEXT_PUBLIC_APP_URL`** con la URL de Vercel (p. ej. `https://tu-proyecto.vercel.app`).
+2. En el [dashboard de Vercel](https://vercel.com) → proyecto → **Settings → Environment Variables**, pega las mismas claves que en `.env.local` (`NEXT_PUBLIC_*`, `FIREBASE_ADMIN_*`, `SESSION_SECRET`, etc.). **No hace falta** configurar la URL pública a mano: en build y runtime Vercel define `VERCEL_URL` y la app la usa (`lib/site-url.ts`).
+3. En **Firebase Console → Authentication → Settings → Authorized domains**, añade tu dominio de Vercel (p. ej. `tu-proyecto.vercel.app`) y el dominio de preview si lo usas.
 
 Firebase sigue pudiendo estar en **plan Spark** (cuota gratuita) como backend; solo el **frontend Next.js** corre en Vercel.
 

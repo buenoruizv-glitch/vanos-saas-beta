@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "beta:check-env": "node scripts/check-env.mjs",
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes,storage,database"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
