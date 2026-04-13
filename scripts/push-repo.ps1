@@ -33,9 +33,20 @@ $Git = Find-Git
 function Invoke-Git {
   # No usar el nombre "Args": choca con $args automático de PowerShell y rompe el splatting.
   param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArguments)
-  & $Git @GitArguments
-  if ($LASTEXITCODE -ne 0) {
-    throw "git $($GitArguments -join ' ') fallo (codigo $LASTEXITCODE)"
+  # PS 7+: stderr de git puede disparar error con $ErrorActionPreference Stop; PS 5: igual es mas seguro.
+  $prevEap = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  try {
+    # 2>&1 para capturar stderr; usar --all en lugar de -A (evita confusion con alias en PS).
+    $out = & $Git @GitArguments 2>&1
+    $code = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $prevEap
+  }
+  if ($code -ne 0) {
+    $detail = if ($null -eq $out) { "" } else { ($out | Out-String).Trim() }
+    if (-not $detail) { $detail = "(sin salida de git)" }
+    throw "git $($GitArguments -join ' ') fallo (codigo $code): $detail"
   }
 }
 
@@ -86,7 +97,8 @@ if ($hasOrigin) {
   Invoke-Git @("remote", "add", "origin", $remoteUrl)
 }
 
-Invoke-Git @("add", "-A")
+# Usar --all en lugar de -A: en algunos PowerShell -A se interpreta mal al pasarlo a git.exe
+Invoke-Git @("add", "--all")
 $status = (& $Git status --porcelain)
 if ($status) {
   $msg = "deploy: $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
