@@ -28,6 +28,11 @@ function Invoke-GitSilent {
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $RepoRoot
 
+if (-not (Test-Path -LiteralPath (Join-Path $RepoRoot "package.json"))) {
+  Write-Host "Aviso: no hay package.json aqui. RepoRoot debe ser la raiz del proyecto (donde esta app/ y package.json)." -ForegroundColor Yellow
+  Write-Host "Ruta actual: $RepoRoot" -ForegroundColor Yellow
+}
+
 $Git = Find-Git
 
 function Invoke-Git {
@@ -101,14 +106,20 @@ $status = (& $Git status --porcelain)
 if ($status) {
   $msg = "deploy: $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
   Invoke-Git -GitArguments @("commit", "-m", $msg)
-} else {
-  Write-Host "Sin cambios nuevos para commitear." -ForegroundColor DarkGray
 }
 
 $hasHead = (Invoke-GitSilent -GitExe $Git -GitArgs @("rev-parse", "--verify", "HEAD")) -eq 0
 if (-not $hasHead) {
-  Write-Host "No hay ningún commit en el repo. Añade archivos al proyecto y vuelve a ejecutar." -ForegroundColor Red
+  Write-Host ""
+  Write-Host "No hay ningun commit. Tras 'git add --all' no hay nada en staging." -ForegroundColor Red
+  Write-Host "Causas tipicas: carpeta del proyecto vacia, o .gitignore excluye todos los archivos." -ForegroundColor Red
+  Write-Host "Salida de git status:" -ForegroundColor Yellow
+  & $Git status
   exit 1
+}
+
+if (-not $status) {
+  Write-Host "Sin cambios nuevos para commitear." -ForegroundColor DarkGray
 }
 
 Invoke-Git -GitArguments @("branch", "-M", "main")
